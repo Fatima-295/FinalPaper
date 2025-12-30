@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         VENV = "venv"
-        DEPLOY_DIR = "/tmp/flask_app_deploy"
+        DEPLOY_DIR = "C:\\FlaskAppDeploy"
     }
 
     triggers {
@@ -15,52 +15,53 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 echo 'Cloning the Flask application repository...'
-                git url: 'https://github.com/Fatima-295/FinalPaper.git', branch: 'main'
+                git 'https://github.com/Fatima-295/FinalPaper.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
                 echo 'Installing Python dependencies...'
-                sh '''
-                python3 -m venv $VENV
-                . $VENV/bin/activate
+                bat """
+                python -m venv %VENV%
+                call %VENV%\\Scripts\\activate.bat
                 pip install --upgrade pip
                 pip install -r requirements.txt
-                '''
+                """
             }
         }
 
         stage('Run Unit Tests') {
             steps {
                 echo 'Running unit tests (if available)...'
-                sh '''
-                . $VENV/bin/activate
-                pytest || echo "No tests found, skipping test stage"
-                '''
+                bat """
+                call %VENV%\\Scripts\\activate.bat
+                pytest || echo No tests found
+                """
             }
         }
 
         stage('Build Application') {
             steps {
-                echo 'Preparing Flask application for deployment...'
-                sh '''
-                mkdir -p build
-                cp app.py requirements.txt build/
-                cp -r static build/
-                cp -r templates build/
-                '''
+                echo 'Building the Flask application...'
+                bat """
+                mkdir build
+                xcopy app.py build\\ /Y
+                xcopy requirements.txt build\\ /Y
+                xcopy static build\\static /E /I /Y
+                xcopy templates build\\templates /E /I /Y
+                """
             }
         }
 
         stage('Deploy Application') {
             steps {
                 echo 'Simulating deployment...'
-                sh '''
-                mkdir -p $DEPLOY_DIR
-                cp -r build/* $DEPLOY_DIR
-                echo "Flask app deployed to $DEPLOY_DIR"
-                '''
+                bat """
+                mkdir %DEPLOY_DIR%
+                xcopy build\\* %DEPLOY_DIR% /E /I /Y
+                echo Flask app deployed to %DEPLOY_DIR%
+                """
             }
         }
     }
